@@ -29,4 +29,7 @@ gulp.task('watch', function () {
     watch([config.path.watch.fonts], function (event, cb) {
         gulp.start(['font']);
     });
+    watch([config.path.watch.sound], function (event, cb) {
+        gulp.start(['sound']);
+    });
 });

@@ -1,64 +1,138 @@
-"use strict";
-$(window).on('load', function () {
+/////////////////////////////////////RENDER///////////////////////////////////
 
-    var Like = {
-        likeSendReq: function (nodeClass, cardId) {
-            var that = this;
-            var likeState = !$(nodeClass).hasClass('checked');
-            var post_data = {
-                cardId: cardId,
-                like: likeState
-            };
-            console.log(post_data);
-            // $.ajax({
-            //     type: "POST",
-            //     url: "",
-            //     data: JSON.stringify(post_data),
-            //     success: function (html) {
-            //         this.likeState(nodeClass, true);
-            //     }
-            // });
-            setTimeout(function () {
-                that.likeState(nodeClass, likeState);
-            }, 300);
-        },
-        likeState: function (nodeClass, likeState) {
-            if(likeState){
-                $(nodeClass).addClass('checked');
+var Game = {
+    root: document.querySelector('.game-fild-anodes'),
+    soundLinksArr: [
+        'a/91564__simon99__short-bass-with-guitar.wav',
+        'a/140765__setuniman__springy-thud-rolling-away-s11.wav',
+        'a/146266__setuniman__bubbling-boing-0-h16j.wav',
+        'a/168606__setuniman__springy-o36b.wav'
+    ],
+    currEl: '',
+    getCurrEl: function () {
+        return this.currEl
+    },
+    setCurrEl: function (el) {
+        this.currEl = el
+    },
+    createEl: function (nodeId, src) {
+        var div = document.createElement('DIV');
+        div.classList.add("draggable", "drag-drop");
+        div.setAttribute("id", "yes-drop"+nodeId);
+        div.setAttribute("data-src", src);
+        this.root.appendChild(div);
+    },
+    createAudio: function (audioSrs) {
+        var rootForAudio = document.querySelector('.audio-bank');
+        var audio = document.createElement('AUDIO');
+        audio.setAttribute("loop", "true");
+        audio.setAttribute("autoplay", "true");
+        audio.setAttribute("src", audioSrs);
+
+        rootForAudio.appendChild(audio);
+        console.log('asas');
+    },
+    init: function () {
+        var that=this;
+        this.soundLinksArr.forEach(
+            function (val, i) {
+                that.createEl(i+1, val);
             }
-            else
-            {
-                if ($(nodeClass).hasClass('checked')){
-                    $(nodeClass).removeClass('checked')
-                }
+        );
+    }
+};
+
+
+    // target elements with the "draggable" class
+    interact('.draggable')
+        .draggable({
+            // enable inertial throwing
+            inertia: true,
+            // keep the element within the area of it's parent
+            restrict: {
+                restriction: "#game-fild",
+                endOnly: true,
+                elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
+            },
+            // enable autoScroll
+            autoScroll: true,
+
+            // call this function on every dragmove event
+            onmove: dragMoveListener,
+            // call this function on every dragend event
+            onend: function (event) {
+                var textEl = event.target.querySelector('p');
+
+                textEl && (textEl.textContent =
+                    'moved a distance of '
+                    + (Math.sqrt(Math.pow(event.pageX - event.x0, 2) +
+                        Math.pow(event.pageY - event.y0, 2) | 0))
+                        .toFixed(2) + 'px');
             }
-        },
-        init: function () {
-            $('.img-block-content__like').on('click', function () {
-                Like.likeSendReq(this, 1);
-            });
-        }
-    };
-    Like.init();
+        });
 
-    var Popup = {
-        show: function (popupTrigger, popupEl, showClass) {
-            $(popupTrigger).on('click', function () {
-                $(popupEl).toggleClass(showClass);
-                $('body').css('overflow', 'hidden');
-            })
-        },
-        hide: function (popupCloseButton, popupEl, showClass) {
-            $(popupCloseButton).on('click', function () {
-                $(popupEl).toggleClass(showClass);
-                $('body').css('overflow', 'auto');
-            })
-        },
+    function dragMoveListener (event) {
+        Game.setCurrEl(event.target.dataset.src);
+        var target = event.target,
+            // keep the dragged position in the data-x/data-y attributes
+            x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
+            y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
 
-        init: function(){
-            this.show('.content-popup-button', '.fade', 'block');
-            this.hide('.popup-close', '.fade', 'block');
+        // translate the element
+        target.style.webkitTransform =
+            target.style.transform =
+                'translate(' + x + 'px, ' + y + 'px)';
+
+        // update the posiion attributes
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+    }
+
+    // this is used later in the resizing and gesture demos
+    window.dragMoveListener = dragMoveListener;
+
+    /* The dragging code for '.draggable' from the demo above
+     * applies to this demo as well so it doesn't have to be repeated. */
+
+// enable draggables to be dropped into this
+    interact('.dropzone').dropzone({
+        // only accept elements matching this CSS selector
+        accept: ['#yes-drop', '#yes-drop2', '#yes-drop3', '#yes-drop4'],
+        // Require a 75% element overlap for a drop to be possible
+        overlap: 0.75,
+
+        // listen for drop related events:
+
+        ondropactivate: function (event) {
+            // add active dropzone feedback
+            event.target.classList.add('drop-active');
+        },
+        ondragenter: function (event) {
+            var draggableElement = event.relatedTarget,
+                dropzoneElement = event.target;
+
+            // feedback the possibility of a drop
+            dropzoneElement.classList.add('drop-target');
+            draggableElement.classList.add('can-drop');
+            draggableElement.textContent = 'Dragged in';
+        },
+        ondragleave: function (event) {
+            // remove the drop feedback style
+            event.target.classList.remove('drop-target');
+            event.relatedTarget.classList.remove('can-drop');
+            event.relatedTarget.textContent = 'Dragged out';
+        },
+        ondrop: function (event) {
+            Game.createAudio(Game.getCurrEl());
+            console.log(event.target);
+        },
+        ondropdeactivate: function (event) {
+            // remove active dropzone feedback
+            event.target.classList.remove('drop-active');
+            event.target.classList.remove('drop-target');
         }
+    });
+
+    window.onload = function () {
+        Game.init();
     };
-    Popup.init();
-});

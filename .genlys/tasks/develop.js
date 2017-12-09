@@ -19,7 +19,8 @@ gulp.task('dev', [
     'script',
     'style',
     'font',
-    'image'
+    'image',
+    'sound'
 ]);
 
 gulp.task('view', function () {
@@ -53,5 +54,10 @@ gulp.task('image', function () {
 gulp.task('font', function () {
     gulp.src(config.path.app.fonts)
         .pipe(gulp.dest(config.path.dev.fonts))
+});
+
+gulp.task('sound', function () {
+    gulp.src(config.path.app.sound)
+        .pipe(gulp.dest(config.path.dev.sound))
 });
 
