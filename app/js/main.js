@@ -1,12 +1,13 @@
 /////////////////////////////////////RENDER///////////////////////////////////
 
 var Game = {
-    root: document.querySelector('.game-fild-anodes'),
+    audioBox: document.querySelector('.audio-nodes'),
+    playerBox: document.querySelector('.dropzone-box'),
     soundLinksArr: [
-        'a/91564__simon99__short-bass-with-guitar.wav',
-        'a/140765__setuniman__springy-thud-rolling-away-s11.wav',
-        'a/146266__setuniman__bubbling-boing-0-h16j.wav',
-        'a/168606__setuniman__springy-o36b.wav'
+        'a/short-bass-with-guitar.wav',
+        'a/springy-thud-rolling-away-s11.wav',
+        'a/bubbling-boing-0-h16j.wav',
+        'a/springy-o36b.wav'
     ],
     currEl: '',
     getCurrEl: function () {
@@ -15,12 +16,18 @@ var Game = {
     setCurrEl: function (el) {
         this.currEl = el
     },
-    createEl: function (nodeId, src) {
+    createMusicNode: function (nodeId, src) {
         var div = document.createElement('DIV');
         div.classList.add("draggable", "drag-drop");
         div.setAttribute("id", "yes-drop"+nodeId);
         div.setAttribute("data-src", src);
-        this.root.appendChild(div);
+        this.audioBox.appendChild(div);
+    },
+    createPlayerNode: function (nodeId) {
+        var div = document.createElement('DIV');
+        div.classList.add("dropzone");
+        div.setAttribute("id", "outer-dropzone"+nodeId);
+        this.playerBox.appendChild(div);
     },
     createAudio: function (audioSrs) {
         var rootForAudio = document.querySelector('.audio-bank');
@@ -36,103 +43,82 @@ var Game = {
         var that=this;
         this.soundLinksArr.forEach(
             function (val, i) {
-                that.createEl(i+1, val);
+                that.createMusicNode(i+1, val);
+                // that.createPlayerNode(i+1, val);
             }
         );
+        Game.createPlayerNode(1);
     }
 };
 
-
-    // target elements with the "draggable" class
-    interact('.draggable')
-        .draggable({
-            // enable inertial throwing
-            inertia: true,
-            // keep the element within the area of it's parent
-            restrict: {
-                restriction: "#game-fild",
-                endOnly: true,
-                elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
-            },
-            // enable autoScroll
-            autoScroll: true,
-
-            // call this function on every dragmove event
-            onmove: dragMoveListener,
-            // call this function on every dragend event
-            onend: function (event) {
-                var textEl = event.target.querySelector('p');
-
-                textEl && (textEl.textContent =
-                    'moved a distance of '
-                    + (Math.sqrt(Math.pow(event.pageX - event.x0, 2) +
-                        Math.pow(event.pageY - event.y0, 2) | 0))
-                        .toFixed(2) + 'px');
-            }
-        });
-
-    function dragMoveListener (event) {
-        Game.setCurrEl(event.target.dataset.src);
-        var target = event.target,
-            // keep the dragged position in the data-x/data-y attributes
-            x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
-            y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-
-        // translate the element
-        target.style.webkitTransform =
-            target.style.transform =
-                'translate(' + x + 'px, ' + y + 'px)';
-
-        // update the posiion attributes
-        target.setAttribute('data-x', x);
-        target.setAttribute('data-y', y);
-    }
-
-    // this is used later in the resizing and gesture demos
-    window.dragMoveListener = dragMoveListener;
-
-    /* The dragging code for '.draggable' from the demo above
-     * applies to this demo as well so it doesn't have to be repeated. */
-
-// enable draggables to be dropped into this
-    interact('.dropzone').dropzone({
-        // only accept elements matching this CSS selector
-        accept: ['#yes-drop', '#yes-drop2', '#yes-drop3', '#yes-drop4'],
-        // Require a 75% element overlap for a drop to be possible
-        overlap: 0.75,
-
-        // listen for drop related events:
-
-        ondropactivate: function (event) {
-            // add active dropzone feedback
-            event.target.classList.add('drop-active');
+interact('.draggable')
+    .draggable({
+        inertia: true,
+        restrict: {
+            restriction: "#game-fild",
+            endOnly: true,
+            elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
         },
-        ondragenter: function (event) {
-            var draggableElement = event.relatedTarget,
-                dropzoneElement = event.target;
+        autoScroll: true,
+        onmove: dragMoveListener,
+        onend: function (event) {
+            var textEl = event.target.querySelector('p');
 
-            // feedback the possibility of a drop
-            dropzoneElement.classList.add('drop-target');
-            draggableElement.classList.add('can-drop');
-            draggableElement.textContent = 'Dragged in';
-        },
-        ondragleave: function (event) {
-            // remove the drop feedback style
-            event.target.classList.remove('drop-target');
-            event.relatedTarget.classList.remove('can-drop');
-            event.relatedTarget.textContent = 'Dragged out';
-        },
-        ondrop: function (event) {
-            Game.createAudio(Game.getCurrEl());
-            console.log(event.target);
-        },
-        ondropdeactivate: function (event) {
-            // remove active dropzone feedback
-            event.target.classList.remove('drop-active');
-            event.target.classList.remove('drop-target');
+            textEl && (textEl.textContent =
+                'moved a distance of '
+                + (Math.sqrt(Math.pow(event.pageX - event.x0, 2) +
+                    Math.pow(event.pageY - event.y0, 2) | 0))
+                    .toFixed(2) + 'px');
         }
     });
 
-    window.onload = function () {
-        Game.init();
-    };
+function dragMoveListener (event) {
+    Game.setCurrEl(event.target.dataset.src);
+
+    var target = event.target,
+        // keep the dragged position in the data-x/data-y attributes
+        x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
+        y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+    // translate the element
+    target.style.webkitTransform =
+        target.style.transform =
+            'translate(' + x + 'px, ' + y + 'px)';
+
+    // update the posiion attributes
+    target.setAttribute('data-x', x);
+    target.setAttribute('data-y', y);
+}
+
+interact('.dropzone').dropzone({
+    overlap: 0.75,
+    ondropactivate: function (event) {
+        event.target.classList.add('drop-active');
+    },
+    ondragenter: function (event) {
+        var draggableElement = event.relatedTarget,
+            dropzoneElement = event.target;
+        dropzoneElement.classList.add('drop-target');
+        draggableElement.classList.add('can-drop');
+        draggableElement.textContent = 'in';
+    },
+    ondragleave: function (event) {
+        event.target.classList.remove('drop-target');
+        event.relatedTarget.classList.remove('can-drop');
+        event.relatedTarget.textContent = 'out';
+    },
+    ondrop: function (event) {
+        Game.createAudio(Game.getCurrEl());
+
+        var pln = $('.dropzone').length;
+        Game.createPlayerNode(pln+1);
+    },
+    ondropdeactivate: function (event) {
+        event.target.classList.remove('drop-active');
+        event.target.classList.remove('drop-target');
+    }
+});
+
+window.onload = function () {
+    Game.init();
+};
